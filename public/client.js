@@ -1,9 +1,11 @@
 function match() {
   return ({
     username: '',
+    userid: -1,
     token: '',
     activeTab: 'home',
-    potentialMatches: [{
+    isLoginedIn: false,
+    nearMe: [{
       name: 'pam',
       description: '',
       location: {
@@ -50,23 +52,35 @@ function match() {
         in: 3
       },
     }],
+    init() {
+      console.log("init!");
+      console.log('get token from session');
+      const token = window.sessionStorage.getItem('accessToken')
+      if (!token) {
+        console.log('No token found. Not logged in.');
+        return;
+      }
+      this.token = token;
+      this.isLoginedIn = true;
+      this.getPeopleNearMe();
+    },
     currentMatch() {
-      if (this.potentialMatches.length < 1) {
+      if (this.nearMe.length < 1) {
         return undefined;
       }
       
-      match = this.potentialMatches[0];
+      match = this.nearMe[0];
       return match;
     },
     pass() {
       console.log('passed');
-      [,...this.potentialMatches] = this.potentialMatches;
-      console.log(this.potentialMatches);
+      [,...this.nearMe] = this.nearMe;
+      console.log(this.nearMe);
     },
     like() {
       console.log('liked!');
       this.matches = [...this.matches, this.currentMatch()];
-      [,...this.potentialMatches] = this.potentialMatches;
+      [,...this.nearMe] = this.nearMe;
       console.log(this.matches);
     },
     setMatchesListHTML() {
@@ -89,5 +103,120 @@ function match() {
               `)
                 .join('\n');
     },
+    login() {
+      
+    },
+    signUp() {
+      const signupBox = document.querySelector('#signup');
+      const usernameField = signupBox.querySelector('input[type="text"');
+      const emailField = signupBox.querySelector('input[type="email"');
+      const passwordField = signupBox.querySelector('input[type="password"');
+      
+      console.log(`username input: ${usernameField.value}`);
+      console.log(`email input: ${emailField.value}`);
+      console.log(`password input: ${passwordField.value}`);
+      console.log("submitted");
+      fetch('https://doctornelson.herokuapp.com/public/signup', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: usernameField.value, 
+          password: passwordField.value
+        })
+      })
+      .then(response => {
+        return response.json().then(data => {
+          if (data.token === undefined) {
+            console.log(`issue logging in.`);
+            console.error(data);
+            return;
+          }
+          console.log(`token recieved: ${data.token}`);
+          window.sessionStorage.accessToken = data.token;
+          this.token = data.token;
+          this.isLoginedIn = true;
+          this.getPeopleNearMe();
+        }).catch((e) => {
+          console.log(e);
+        })
+      });
+    },
+    logout() {
+      window.sessionStorage.removeItem('accessToken');
+      this.isLoginedIn = false;
+    },
+    getPeopleNearMe() {
+      fetch(`https://doctornelson.herokuapp.com/public/nearMe`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: this.token,
+          location: this.location
+        })
+      })
+      .then(r => r.json()
+        .then(data => {
+          if (data.nearMe) {
+            this.nearMe = data.nearMe;
+          }
+        })
+      ).catch(e => {
+        console.log("near me request failed.");
+      });;
+    },
+    getMatches() {
+      fetch(`https://doctornelson.herokuapp.com/public/matches`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: this.token,
+        })
+      })
+      .then(r => r.json()
+        .then(data => {
+          if (data.matches) {
+            this.matches = data.matches;
+          }
+        })
+      ).catch(e => {
+        console.log("matches request failed.");
+      });;
+    },
+    sendAnswer(userid, answer) {
+      if (answer !== 'like' || answer !== 'pass')
+      {
+        log.error('answer is set to an invalid response');
+      }
+      fetch(`https://doctornelson.herokuapp.com/public/answer`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: this.token,
+          userid: userid,
+          answer: answer
+        })
+      })
+      .then(r => r.json()
+        .then(data => {
+          if (data.nearMe) {
+            this.nearMe = data.nearMe;
+          }
+        })
+      ).catch(e => {
+        console.log(`${answer} request failed.`);
+      });
+    }
   });
 }
