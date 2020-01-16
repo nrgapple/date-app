@@ -25,7 +25,7 @@
     <!-- import the webpage's client-side javascript file -->
   </head>
   <body>
-    <div x-data="match()">
+    <div x-data="match()" x-init="init()">
       <header class="sticky">
         <div class="row">
           <div class="col-md-1 col-sm-2">
@@ -83,7 +83,13 @@
                   No Matches.
                 </h3>
               </div>
-              <div class="card fluid" x-show="currentMatch() !== undefined">
+              <div class="card fluid" x-show="!isLoginedIn">
+                <h3>
+                  Login in Settings
+                </h3>
+              </div>
+              <div class="card fluid" 
+                x-show="currentMatch() !== undefined && isLoginedIn">
                 <div class="section">
                   <h2
                     x-text="currentMatch()?currentMatch().name:''"
@@ -130,7 +136,8 @@
             </div>
             <div class="col-sm-1 col-md-3 col-lg-4"></div>
           </div>
-          <div class="row" x-show="currentMatch() !== undefined">
+          <div class="row" 
+            x-show="currentMatch() !== undefined && isLoginedIn">
             <div class="col-sm-2"></div>
             <div class="col-sm-4">
               <button id="pass" style="width:100%" x-on:click="pass()">
@@ -159,9 +166,52 @@
           </div>
         </div>
         <div x-show="activeTab === 'settings'">
-          <h3>
-            settings
-          </h3>
+          <container>
+            <div class="row cols-sm-12">
+              <div>
+                <div class="card fluid">
+                  <button x-on:click="logout()" x-show="isLoginedIn">
+                    Logout
+                  </button>
+                  <div class="button-group" x-show="!isLoginedIn">
+                    <label class="button" for="login-module-control">
+                      Login
+                    </label>
+                    <label class="button" for="signup-module-control">
+                      Sign up
+                    </label>
+                  </div>
+                  <input type="checkbox" id="login-module-control" class="modal">
+                  <div>
+                    <div class="card">
+                      <label for="login-module-control" class="modal-close" ></label>
+                      <h3 class="section">Login</h3>
+                      <div class="input-group">
+                        <input type="text" placeholder="username">
+                        <input type="password" placeholder="password">
+                        <button x-on:submit="login()">Login</button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <input type="checkbox" id="signup-module-control" class="modal">
+                  <div>
+                    <div class="card fluid" id="signup">
+                      <label for="signup-module-control" class="modal-close" ></label>
+                      <h3 class="section">Sign Up</h3>
+                      <div class="input-group" x-show="!isLoginedIn">
+                        <input type="email" placeholder="email">
+                        <input type="text" placeholder="username" value="test">
+                        <input type="password" placeholder="password" value="test">
+                        <button x-on:click="signUp()">Sign Up</button>
+                      </div>
+                      <h1 x-show="isLoginedIn">You're Signed Up and Logined In!</h1>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </container>
         </div>
       </main>
     </div>
