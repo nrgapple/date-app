@@ -74,14 +74,34 @@ function match() {
     },
     pass() {
       console.log('passed');
+      this.sendAnswer(this.userid, 'pass');
       [,...this.nearMe] = this.nearMe;
       console.log(this.nearMe);
+      if(this.nearMe.length < 1) this.getPeopleNearMe();
     },
     like() {
       console.log('liked!');
-      this.matches = [...this.matches, this.currentMatch()];
+      this.sendAnswer(this.userid, 'like').then(match => {
+        if (match === undefined)
+        {
+          console.log('No matches returned.');
+
+        } else {
+          console.log(match);
+          this.matches = [...this.matches, match]
+        }
+
+      }).catch(e => {
+        console.log('like fetch failed');
+        
+        this.matches = [...this.matches, this.currentMatch()];
+        console.log('pretend for now that there was a like');
+        // TODO: remove this when endpoint is working
+      });
+
       [,...this.nearMe] = this.nearMe;
-      console.log(this.matches);
+      if(this.nearMe.length < 1) this.getPeopleNearMe();
+
     },
     setMatchesListHTML() {
       return this.matches.map(match => `
@@ -192,30 +212,38 @@ function match() {
       });;
     },
     sendAnswer(userid, answer) {
-      if (answer !== 'like' || answer !== 'pass')
-      {
-        log.error('answer is set to an invalid response');
-      }
-      fetch(`https://doctornelson.herokuapp.com/public/answer`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          token: this.token,
-          userid: userid,
-          answer: answer
+      return new Promise(function(resolve, reject) {
+        if (!(answer === 'like' || answer === 'pass'))
+        {
+          console.error(`answer [${answer}] is set to an invalid response`);
+        }
+        fetch(`https://doctornelson.herokuapp.com/public/answer`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: this.token,
+            userid: userid,
+            answer: answer
+          })
         })
-      })
-      .then(r => r.json()
-        .then(data => {
-          if (data.nearMe) {
-            this.nearMe = data.nearMe;
+        .then(r => {
+          if (r.status === 404) {
+            reject('404');
           }
-        })
-      ).catch(e => {
-        console.log(`${answer} request failed.`);
+          return r.json()
+            .then(data => {
+              if (data.match) {
+                resolve(data.match);
+              }
+              resolve(undefined);
+            })
+        }).catch(e => {
+          console.log(`${answer} request failed.`);
+          reject(e);
+        });
       });
     }
   });
