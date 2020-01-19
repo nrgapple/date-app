@@ -2,12 +2,19 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Welcome to Glitch!</title>
-    <meta name="description" content="A cool thing made with Glitch" />
+    <title>Shorts</title>
+    <meta name="description" content="Shorts Dating" />
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Shorts">
+    <link rel="apple-touch-icon" href="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fwomens-short_78132.png?v=1579212402928">
+<meta name="theme-color" content="#fff" />
+
     <link
       id="favicon"
       rel="icon"
-      href="https://glitch.com/edit/favicon-app.ico"
+      href="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fshorts.ico?v=1579202263484"
       type="image/x-icon"
     />
     <meta charset="utf-8" />
@@ -23,77 +30,93 @@
       defer
     ></script>
     <!-- import the webpage's client-side javascript file -->
+    <style>
+      /*Override module height.*/
+      [type="checkbox"].modal+div .card {
+        max-height: 100%;
+      }
+    </style>
   </head>
   <body>
     <div x-data="match()" x-init="init()">
       <header class="sticky">
         <div class="row">
           <div class="col-md-1 col-sm-2">
-            <button
+            <div
+              class="logo button"
               style="width:100%"
-              x-show="activeTab !== 'settings'"
-              x-on:click="activeTab = 'settings'"
+              x-show="state.activeTab !== 'settings'"
+              x-on:click="state.activeTab = 'settings'"
             >
               <img
                 src="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fsettings.svg?v=1579105838523"
               />
-            </button>
-            <button
-              x-on:click="activeTab = 'home'"
+            </div>
+            <div
+              class="logo button"
+              x-on:click="state.activeTab = 'home'"
               style="width:100%"
-              x-show="activeTab !== 'home' && activeTab !== 'chat'"
+              x-show="state.activeTab !== 'home' && state.activeTab !== 'chat'"
             >
               <img
                 src="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fhome.svg?v=1579110473668"
               />
-            </button>
+            </div>
           </div>
           <div class="col-md-10 col-sm-8">
-            <h1 style="text-align:center" x-text="activeTab.toUpperCase()">Home</h1>
+            <div class="logo" style="text-align: center;">
+              <img src="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fshorts%20(2).ico?v=1579202465921"></img>       
+            </div>  
           </div>
           <div class="col-md-1 col-sm-2">
-            <button
-              x-on:click="activeTab = 'chat'"
+            <div
+              class="logo button"
+              x-on:click="state.activeTab = 'chat'; initMatchesSection();"
               style="width:100%"
-              x-show="activeTab !== 'chat'"
+              x-show="state.activeTab !== 'chat' && state.isLoggedOn"
             >
               <img
                 src="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fmessage-square.svg?v=1579104182132"
               />
-            </button>
-            <button
-              x-on:click="activeTab = 'home'"
+          </div>
+            <div
+              class="logo button"
+              x-on:click="state.activeTab = 'home'"
               style="width:100%"
-              x-show="activeTab !== 'home' && activeTab !== 'settings'"
+              x-show="state.activeTab !== 'home' && state.activeTab !== 'settings'"
             >
               <img
                 src="https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fhome.svg?v=1579110473668"
               />
-            </button>
+            </div>
           </div>
         </div>
       </header>
       <main>
-        <div x-show="activeTab === 'home'">
+        <div x-show="state.activeTab === 'home'">
           <div class="row">
-            <div class="col-sm-1 col-md-3 col-lg-4"></div>
-            <div class="col-sm-10 col-md-6 col-lg-4">
-              <div class="card fluid" x-show="currentMatch() === undefined">
+            <div class="col-sm"></div>
+            <div class="col-sm-10 col-md-4 col-lg-3">
+              <div class="card fluid" x-show="state.currentPerson === undefined && state.isLoggedOn">
                 <h3>
                   No Matches.
                 </h3>
               </div>
-              <div class="card fluid" x-show="!isLoginedIn">
+              <div class="card fluid" x-show="!state.isLoggedOn">
                 <h3>
                   Login in Settings
                 </h3>
               </div>
-              <div class="card fluid" 
-                x-show="currentMatch() !== undefined && isLoginedIn">
+              <div class="button card fluid" 
+                style="padding:0;"
+                x-show="state.currentPerson != null && state.isLoggedOn"
+                x-on:click="state.isEditable = false; showProfile(state.currentPerson);"
+              >
                 <div class="section">
                   <h2
-                    x-text="currentMatch()?currentMatch().name:''"
+                    x-text="state.currentPerson != null?`${state.currentPerson.firstName} ${state.currentPerson.lastName}`:'';"
                     id="card-name"
+                    align="center"
                   >
                     Name
                   </h2>
@@ -101,43 +124,33 @@
                 <div class="section">
                   <img
                     id="card-image"
-                    x-bind:src="currentMatch()?currentMatch().imgs[0]:''"
+                    x-bind:src="state.currentPerson != null && state.currentPerson.imageUrls != null && state.currentPerson.imageUrls.length > 1 ?state.currentPerson.imageUrls[0]:'https://via.placeholder.com/300.png'"
                   />
                 </div>
                 <div class="section">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Age</th>
-                        <th>Height</th>
-                      </tr>
-                    </thead>
-                    <tbod>
-                      <tr>
-                        <td
-                          data-label="Age"
-                          x-text="currentMatch()?currentMatch().age:''"
-                          id="card-age"
-                        >
-                          22
-                        </td>
-                        <td
-                          data-label="Height"
-                          x-text="`${currentMatch()?currentMatch().height.ft:''}' ${currentMatch()? currentMatch().height.in:''}\&quot`"
-                          id="card-height"
-                        >
-                          5' 4"
-                        </td>
-                      </tr>
-                    </tbod>
-                  </table>
+                  <h4
+                    data-label="Age"
+                    x-text="state.currentPerson != null ? getAge(state.currentPerson.dob):'n/a'"
+                    id="card-age"
+                    align="right"
+                  >
+                    22
+                  </h4>
+                  <h4
+                    data-label="Height"
+                    x-text="`${state.currentPerson != null ?Math.floor(state.currentPerson.height / 12):''}' ${state.currentPerson != null? state.currentPerson.height % 12:''}\&quot`"
+                    id="card-height"
+                    align="right"
+                  >
+                    5' 4"
+                  </h4>
                 </div>
               </div>
             </div>
-            <div class="col-sm-1 col-md-3 col-lg-4"></div>
+            <div class="col-sm"></div>
           </div>
           <div class="row" 
-            x-show="currentMatch() !== undefined && isLoginedIn">
+            x-show="state.currentPerson != null && state.isLoggedOn">
             <div class="col-sm-2"></div>
             <div class="col-sm-4">
               <button id="pass" style="width:100%" x-on:click="pass()">
@@ -156,25 +169,31 @@
             <div class="col-sm-2"></div>
           </div>
         </div>
-        <div x-show="activeTab === 'chat'">
+        <div x-show="state.activeTab === 'chat'">
           <div class="row">
             <div class="col-sm-12">
-              <div class="card fluid" x-html="setMatchesListHTML()">
-
+              <div class="spinner" x-show="state.loading"></div>
+              <div class="card fluid" x-html="setMatchesListHTML()" x-show="!state.loading">
+                
               </div>
             </div>
           </div>
         </div>
-        <div x-show="activeTab === 'settings'">
+        <div x-show="state.activeTab === 'settings'">
           <container>
             <div class="row cols-sm-12">
               <div>
                 <div class="card fluid">
-                  <button x-on:click="logout()" x-show="isLoginedIn">
-                    Logout
-                  </button>
-                  <div class="button-group" x-show="!isLoginedIn">
-                    <label class="button" for="login-module-control">
+                  <div class="button-group" x-show="state.isLoggedOn">
+                    <button class="primary" x-on:click="state.isEditable = true; showProfile(me);" x-show="state.isLoggedOn">
+                      Profile
+                    </button>
+                    <button class="secondary" x-on:click="logout()" x-show="state.isLoggedOn">
+                      Logout
+                    </button>
+                  </div>
+                  <div class="button-group" x-show="!state.isLoggedOn">
+                    <label class="button tertiary" for="login-module-control">
                       Login
                     </label>
                     <label class="button" for="signup-module-control">
@@ -182,36 +201,132 @@
                     </label>
                   </div>
                   <input type="checkbox" id="login-module-control" class="modal">
-                  <div>
-                    <div class="card">
+                  <div role="dialog" aria-labelledby="dialog-title">
+                    <div class="card fluid" id="login">
                       <label for="login-module-control" class="modal-close" ></label>
                       <h3 class="section">Login</h3>
-                      <div class="input-group">
-                        <input type="text" placeholder="username">
+                      <div class="input-group" x-show="!state.isLoggedOn" value="test" x-on:keydown.enter="login()">
+                        <input type="text" placeholder="username" value="test">
                         <input type="password" placeholder="password">
-                        <button x-on:submit="login()">Login</button>
+                        <button x-on:click="login()">Login</button>
+                        <h3 id="info"></h3>
                       </div>
+                      <div class="spinner" x-show="state.loading"></div>
+                      <h1 x-show="state.isLoggedOn">You're Logged In!</h1>
                     </div>
                   </div>
                   
                   <input type="checkbox" id="signup-module-control" class="modal">
-                  <div>
+                  <div role="dialog" aria-labelledby="dialog-title">
                     <div class="card fluid" id="signup">
                       <label for="signup-module-control" class="modal-close" ></label>
                       <h3 class="section">Sign Up</h3>
-                      <div class="input-group" x-show="!isLoginedIn">
-                        <input type="email" placeholder="email">
-                        <input type="text" placeholder="username" value="test">
-                        <input type="password" placeholder="password" value="test">
+                      <div class="input-group" x-show="!state.isLoggedOn" x-on:keydown.enter="signUp()">
+                        <input type="text" placeholder="first" id="first">
+                        <input type="text" placeholder="last" id="last">
+                        <input type="date" placeholder="dob" id="dob">
+                        <input type="email" placeholder="email" id="email">
+                        <input type="text" placeholder="username" value="test" id="username">
+                        <input type="password" placeholder="password" value="test" id="password">
                         <button x-on:click="signUp()">Sign Up</button>
                       </div>
-                      <h1 x-show="isLoginedIn">You're Signed Up and Logined In!</h1>
+                      <div class="spinner" x-show="state.loading"></div>
+                      <h1 x-show="state.isLoggedOn">You're Signed Up and Logged In!</h1>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </container>
+        </div>
+
+        <input type="checkbox" id="match-module-control" class="modal" x-bind:checked="state.isMatchModuleActive">
+        <div role="dialog" aria-labelledby="dialog-title">
+          <div class="card fluid" style="height: 70vh;" x-on:click.away="state.isMatchModuleActive = false;">
+            <div class="row">
+              <div>
+                <div class="card fluid">
+                  <h3 class="section">You have a match!</h3>
+                  <div class="section">
+                    <h2
+                      x-text="state.selectedProfile != null?`${state.selectedProfile.firstName} ${state.selectedProfile.lastName}`:''"
+                      id="card-name"
+                    >
+                      Name
+                    </h2>
+                  </div>
+                  <div class="section">
+                    <img
+                      id="card-image"
+                      x-bind:src="state.selectedProfile != null && state.selectedProfile.imageUrls != null && state.selectedProfile.imageUrls.length > 0?state.selectedProfile.imageUrls[0]:'https://via.placeholder.com/300.png?text=No+Image+Found'"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>`
+          </div>
+        </div>
+          <input type="checkbox" id="profile-module-control" class="modal" x-bind:checked="state.isProfileActive">
+          <div role="dialog" aria-labelledby="dialog-title">
+          <div class="card fluid" style="height: 70vh;" x-on:click.away="state.isProfileActive = false; state.isEditing = false">
+            <div class="row">
+              <div>
+                <div class="card fluid" id="profile">
+                  <div class="section">
+                    <div class="row">
+                      <div class="col-sm-6"><b>Profile</b></div>
+                      <div class="col-sm-6" x-show="state.isEditable">
+                        <span x-show="!state.isEditing" x-on:click="state.isEditing = true;" style="text-align: right;">Edit</span>
+                        <span x-show="state.isEditing" x-on:click="cancelEditProfile()" style="text-align: left;">Cancel</span>
+                        <span x-show="state.isEditing" x-on:click="updateProfile();" style="text-align: right;"><b>Done</b></span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section" x-show="state.loading">
+                    <div class="spinner"></div>
+                  </div>
+                  <div class="section">
+                    <h2
+                      x-text="state.selectedProfile != null?`${state.selectedProfile.firstName} ${state.selectedProfile.lastName}`:'No Name'"
+                      id="card-name"
+                    >
+                      Name
+                    </h2>
+                  </div>
+                  <div class="section">
+                    <img
+                      id="card-image"
+                      x-bind:src="state.selectedProfile != null && state.selectedProfile.imageUrls != null && state.selectedProfile.imageUrls.length > 0?state.selectedProfile.imageUrls[0]:'https://via.placeholder.com/300.png'"
+                    />
+                  </div>
+                  <div class="section">
+                    <h4
+                      x-text="state.selectedProfile != null?getAge(state.selectedProfile.dob):'n/a'"
+                      id="card-age"
+                      align="right"
+                    >
+                      22
+                    </h4>
+                    <h4
+                      x-text="`${state.selectedProfile != null?Math.floor(state.selectedProfile.height / 12):''}' ${state.selectedProfile != null? state.selectedProfile.height % 12:''}\&quot`"
+                      id="card-height"
+                      align="right"
+                      x-show="!state.isEditing"
+                    >
+                      5' 4"
+                    </h4>
+                    <input align="right" x-bind:value="state.selectedProfile.height" type="number" placeholder="Height in inches" x-show="state.isEditing" id="height">
+                  </div>
+                  <div class="section">
+                    <p
+                      x-show="!state.isEditing" x-text="state.selectedProfile != null && state.selectedProfile.about != null?state.selectedProfile.about:'No info'"
+                    ></p>
+                    <textarea placeholder="about" x-show="state.isEditing" id="about" x-bind:value="state.selectedProfile.about"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
