@@ -1,0 +1,17 @@
+{
+    "name": "Shorts",
+    "short_name": "Shorts",
+    "icons": [{
+      "src": "short-small.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }, {
+      "src": "https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fwomens-short_78132.png?v=1579212402928",
+        "sizes": "512x512",
+        "type": "image/png"
+    }],
+    "start_url": "https://cdn.glitch.com/8b0aa4a9-075e-42fe-9b09-11dd281fcfce%2Fwomens-short_78132.png?v=1579212402928",
+    "display": "standalone",
+    "background_color": "#000",
+    "theme_color": "#fff"
+  }
