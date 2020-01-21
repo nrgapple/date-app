@@ -9,9 +9,7 @@ function match() {
       dob: new Date('1995-12-17'),
       token: undefined,
       about: 'This is test description. Not a lot going on.',
-      imageUrls: [
-        "http://www.funcage.com/blog/wp-content/uploads/2013/11/Random-Photoshopped-Pictures-006.jpg"
-      ],
+      images: [],
       location: {}
     },
     state: {
@@ -24,6 +22,8 @@ function match() {
       isMatchModuleActive: false,
       isEditing: false,
       isEditable: false,
+      currentImage: undefined,
+      uploadText: ''
     },
     nearMe: [],
     matches: [],
@@ -99,23 +99,23 @@ function match() {
       });
     },
     setMatchesListHTML() {
-      return this.matches !== undefined && this.matches.length > 0? this.matches.map(match => `
-              <div class="button section" width=100%> 
-                  <div class="row">
-                    <div class="col-sm-4">  
-                      <img
-                          src=${match.img && match.img.length > 0?match.imageUrls[0]:'https://via.placeholder.com/300.png'}
-                          width="92px"
-                      />
-                    </div>
-                    <div class="col-sm-8">
-                      <h4>${match.firstName?match.firstName:'No Name Found'}</h4>
-                    </div>
-                  </div>
+      return this.matches !== undefined && this.matches.length > 0? this.matches.map(match => /*html*/`
+        <div class="button section" width=100%> 
+            <div class="row">
+              <div class="col-sm-4">  
+                <img
+                    src=${match.img && match.img.length > 0?match.images.imageUrl[0]:'https://via.placeholder.com/300.png'}
+                    width="92px"
+                />
               </div>
-              `)
-                .join('\n'):
-              '';
+              <div class="col-sm-8">
+                <h4>${match.firstName?match.firstName:'No Name Found'}</h4>
+              </div>
+            </div>
+        </div>
+        `)
+          .join('\n'):
+        '';
     },
     showProfile(user) {
       this.state.selectedProfile = {...user};
@@ -332,6 +332,57 @@ function match() {
         }).catch(e => {
           console.log(`${answer} request failed.`);
           reject(e);
+        });
+      });
+    },
+    imagesSwipeHTML(user) {
+      return user !== undefined && user.images !== undefined && user.images.length > 0
+        ? user.images.map(img => /*html*/`
+          <img src=${img.imageUrl} width="100vw">
+        `).join('\n')
+        : '';
+    },
+    addImage() {
+      const profile = document.querySelector('#profile');
+      const imageField = profile.querySelector('#add-image');
+      if (imageField.files[0]) 
+        this.postImage(imageField.files[0]).then(d => {
+          console.log(d);
+          this.me.images = [
+            ...images, {
+              imageId: d.imageId,
+              imageUrl: d.imageUrl
+          }];
+          this.state.selectedProfile = {...me};
+          this.state.uploadText = `Image Uploaded.`;
+        }).catch (e => {
+          console.log(`error uploading image ${e}`);
+        })
+      else
+        console.log('error: no image.');
+    },
+    postImage(image) {
+      return new Promise((resolve, reject) => {
+        var formData = new FormData();
+        formData.append("image", image);
+        fetch(`${apiURL}/secure/image`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Accept': 'application/json',
+          },
+          body: formData
+        })
+        .then(response => {
+          if (response)
+            response.json().then(d => {
+              console.log(`[addImage] data:`);
+              console.log(d);
+              resolve(d);
+            })
+          reject('no response');
+        }).catch(e => {
+          reject(`Failed to add image: ${e}`);
         });
       });
     },

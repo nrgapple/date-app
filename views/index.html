@@ -25,6 +25,7 @@
       rel="stylesheet"
       href="https://cdn.rawgit.com/Chalarangelo/mini.css/v3.0.1/dist/mini-default.min.css"
     />
+   
     <script
       src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v1.8.2/dist/alpine.js"
       defer
@@ -122,10 +123,12 @@
                   </h2>
                 </div>
                 <div class="section">
-                  <img
-                    id="card-image"
-                    x-bind:src="state.currentPerson != null && state.currentPerson.imageUrls != null && state.currentPerson.imageUrls.length > 1 ?state.currentPerson.imageUrls[0]:'https://via.placeholder.com/300.png'"
-                  />
+                  <div class="glightbox" data-gallery="gallery1" width="100%" x-show="!state.isEditing" x-html="imagesSwipeHTML(state.currentPerson);" id="profile-slideshow">
+                    <img
+                      id="card-image"
+                      x-bind:src="state.currentPerson != null && state.currentPerson.images != null && state.currentPerson.images.length > 0?state.currentPerson.images[0].imageUrl:'https://via.placeholder.com/300.png'"
+                    />
+                  </div>
                 </div>
                 <div class="section">
                   <h4
@@ -258,7 +261,7 @@
                   <div class="section">
                     <img
                       id="card-image"
-                      x-bind:src="state.selectedProfile != null && state.selectedProfile.imageUrls != null && state.selectedProfile.imageUrls.length > 0?state.selectedProfile.imageUrls[0]:'https://via.placeholder.com/300.png?text=No+Image+Found'"
+                      x-bind:src="state.selectedProfile != null && state.selectedProfile.images != null && state.selectedProfile.images.length > 0?state.selectedProfile.images[0].imageUrl:'https://via.placeholder.com/300.png?text=No+Image+Found'"
                     />
                   </div>
                 </div>
@@ -266,67 +269,74 @@
             </div>`
           </div>
         </div>
-          <input type="checkbox" id="profile-module-control" class="modal" x-bind:checked="state.isProfileActive">
-          <div role="dialog" aria-labelledby="dialog-title">
-          <div class="card fluid" style="height: 70vh;" x-on:click.away="state.isProfileActive = false; state.isEditing = false">
-            <div class="row">
-              <div>
-                <div class="card fluid" id="profile">
-                  <div class="section">
-                    <div class="row">
-                      <div class="col-sm-6"><b>Profile</b></div>
-                      <div class="col-sm-6" x-show="state.isEditable">
-                        <span x-show="!state.isEditing" x-on:click="state.isEditing = true;" style="text-align: right;">Edit</span>
-                        <span x-show="state.isEditing" x-on:click="cancelEditProfile()" style="text-align: left;">Cancel</span>
-                        <span x-show="state.isEditing" x-on:click="updateProfile();" style="text-align: right;"><b>Done</b></span>
-                      </div>
+        <input type="checkbox" id="profile-module-control" class="modal" x-bind:checked="state.isProfileActive">
+        <div role="dialog" aria-labelledby="dialog-title">
+        <div class="card fluid" style="height: 70vh;" x-on:click.away="state.isProfileActive = false; state.isEditing = false">
+          <div class="row">
+            <div>
+              <div class="card fluid" id="profile">
+                <div class="section">
+                  <div class="row">
+                    <div class="col-sm-6"><b>Profile</b></div>
+                    <div class="col-sm-6" x-show="state.isEditable">
+                      <span x-show="!state.isEditing" x-on:click="state.isEditing = true;" style="text-align: right;">Edit</span>
+                      <span x-show="state.isEditing" x-on:click="cancelEditProfile(); state.uploadText=''" style="text-align: left;">Cancel</span>
+                      <span x-show="state.isEditing" x-on:click="updateProfile(); state.uploadText = ''" style="text-align: right;"><b>Done</b></span>
                     </div>
                   </div>
-                  <div class="section" x-show="state.loading">
-                    <div class="spinner"></div>
-                  </div>
-                  <div class="section">
-                    <h2
-                      x-text="state.selectedProfile != null?`${state.selectedProfile.firstName} ${state.selectedProfile.lastName}`:'No Name'"
-                      id="card-name"
-                    >
-                      Name
-                    </h2>
-                  </div>
-                  <div class="section">
+                </div>
+                <div class="section" x-show="state.loading">
+                  <div class="spinner"></div>
+                </div>
+                <div class="section">
+                  <h2
+                    x-text="state.selectedProfile != null?`${state.selectedProfile.firstName} ${state.selectedProfile.lastName}`:'No Name'"
+                    id="card-name"
+                  >
+                    Name
+                  </h2>
+                </div>
+                <div class="section">
+                  <div class="glightbox" data-gallery="gallery1" width="100%" x-show="!state.isEditing" x-html="imagesSwipeHTML(state.selectedProfile);" id="profile-slideshow">
                     <img
                       id="card-image"
-                      x-bind:src="state.selectedProfile != null && state.selectedProfile.imageUrls != null && state.selectedProfile.imageUrls.length > 0?state.selectedProfile.imageUrls[0]:'https://via.placeholder.com/300.png'"
+                      x-bind:src="state.selectedProfile != null && state.selectedProfile.images != null && state.selectedProfile.images.length > 0?state.selectedProfile.images[0].imageUrl:'https://via.placeholder.com/300.png'"
                     />
                   </div>
-                  <div class="section">
-                    <h4
-                      x-text="state.selectedProfile != null?getAge(state.selectedProfile.dob):'n/a'"
-                      id="card-age"
-                      align="right"
-                    >
-                      22
-                    </h4>
-                    <h4
-                      x-text="`${state.selectedProfile != null?Math.floor(state.selectedProfile.height / 12):''}' ${state.selectedProfile != null? state.selectedProfile.height % 12:''}\&quot`"
-                      id="card-height"
-                      align="right"
-                      x-show="!state.isEditing"
-                    >
-                      5' 4"
-                    </h4>
-                    <input align="right" x-bind:value="state.selectedProfile.height" type="number" placeholder="Height in inches" x-show="state.isEditing" id="height">
+                  <div class="button-group" x-show="state.isEditing">
+                    <input type="file" name="add-image" accept="image/*" id="add-image">
+                    <button x-on:click="addImage()">Upload</button>
+                    <label x-text="state.uploadText"></label>
                   </div>
-                  <div class="section">
-                    <p
-                      x-show="!state.isEditing" x-text="state.selectedProfile != null && state.selectedProfile.about != null?state.selectedProfile.about:'No info'"
-                    ></p>
-                    <textarea placeholder="about" x-show="state.isEditing" id="about" x-bind:value="state.selectedProfile.about"></textarea>
-                  </div>
+                </div>
+                <div class="section">
+                  <h4
+                    x-text="state.selectedProfile != null?getAge(state.selectedProfile.dob):'n/a'"
+                    id="card-age"
+                    align="right"
+                  >
+                    22
+                  </h4>
+                  <h4
+                    x-text="`${state.selectedProfile != null?Math.floor(state.selectedProfile.height / 12):''}' ${state.selectedProfile != null? state.selectedProfile.height % 12:''}\&quot`"
+                    id="card-height"
+                    align="right"
+                    x-show="!state.isEditing"
+                  >
+                    5' 4"
+                  </h4>
+                  <input align="right" x-bind:value="state.selectedProfile.height" type="number" placeholder="Height in inches" x-show="state.isEditing" id="height">
+                </div>
+                <div class="section">
+                  <p
+                    x-show="!state.isEditing" x-text="state.selectedProfile != null && state.selectedProfile.about != null?state.selectedProfile.about:'No info'"
+                  ></p>
+                  <textarea placeholder="about" x-show="state.isEditing" id="about" x-bind:value="state.selectedProfile.about"></textarea>
                 </div>
               </div>
             </div>
           </div>
+        </div>
         </div>
       </main>
     </div>
