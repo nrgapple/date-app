@@ -23,7 +23,8 @@ function match() {
       isEditing: false,
       isEditable: false,
       currentImage: undefined,
-      uploadText: ''
+      uploadText: '',
+      currentIndex: 0
     },
     nearMe: [],
     matches: [],
@@ -42,7 +43,7 @@ function match() {
       this.state.isLoggedOn = true;
       this.getPeopleNearMe().then(data => {
         this.nearMe = [...data];
-        this.setCurrentPerson();
+        this.setCurrentPerson(this.state.currentIndex);
         this.getProfile().then(me => {
           this.me = {...me};
           console.log(this.state);
@@ -51,9 +52,15 @@ function match() {
           this.matches = [...d];
         }).catch(e=> console.log(`Couldn't get matches: ${e}`));
       }).catch(e => console.log(e));
+      /*return (() => $("#lightSlider").lightSlider({
+        gallery: true,
+        item: 1,
+        loop: true,
+        slideMargin: 0,
+      }));*/
     },
-    setCurrentPerson() {
-      if (this.nearMe.length < 1) {
+    setCurrentPerson(index) {
+      if (this.nearMe.length <= index) {
         this.getPeopleNearMe().then(p => {
           if (p.length > 0) {
             this.nearMe = [...p];
@@ -62,19 +69,23 @@ function match() {
             this.state.currentPerson = undefined;
             return;
           }
+          index = this.state.currentIndex = 0;
+          this.state.currentPerson = this.nearMe[index];
         })
       }
-      this.state.currentPerson = this.nearMe[0];
+      this.state.currentPerson = this.nearMe[index];
       console.log(this.state.currentPerson);
     },
     pass() {
+      this.state.loading = true;
       console.log('passed');
       this.swipe(this.state.currentPerson.userId, 'pass').then(() => {
-        [,...this.nearMe] = this.nearMe;
-        this.setCurrentPerson();
+        this.setCurrentPerson(++this.state.currentIndex);
+        this.state.loading = false;
         //if(this.nearMe.length < 1) this.getPeopleNearMe();
       }).catch(e => {
-        console.log('like fetch failed');
+        this.state.loading = false;
+        console.log(`pass fetch failed: ${e}`);
       });
     },
     like() {
@@ -86,14 +97,13 @@ function match() {
           console.log('No matches returned.');
         } else if (data.wasMatched) {
           console.log("you got a match!");
-          this.matches = [...this.matches, match];
-          this.state.selectedProfile = {...user};
+          this.matches = [...this.matches, this.state.currentPerson];
+          this.state.selectedProfile = {...this.state.currentPerson};
           this.state.isMatchModuleActive = true;
         } else {
           console.log(`[like()] wrong response data`);
         }
-        [,...this.nearMe] = this.nearMe;
-        this.setCurrentPerson();
+        this.setCurrentPerson(++this.state.currentIndex);
       }).catch(e => {
         console.log(`like fetch failed: ${e}`);
       });
@@ -122,6 +132,14 @@ function match() {
       console.log(this.state.selectedProfile);
       this.state.isProfileActive = true;
       console.log(this.state);
+      setTimeout(() => {
+        $("#lightSlider").lightSlider({
+          gallery: true,
+          item: 1,
+          loop: true,
+          slideMargin: 0,
+        });
+      }, 200); 
     },
     initMatchesSection() {
       this.state.loading = true;
@@ -338,7 +356,9 @@ function match() {
     imagesSwipeHTML(user) {
       return user !== undefined && user.images !== undefined && user.images.length > 0
         ? user.images.map(img => /*html*/`
-          <img src=${img.imageUrl} width="100vw">
+          <li>
+              <img src=${img.imageUrl} style="width:100vw">
+          </li>
         `).join('\n')
         : '';
     },
@@ -348,12 +368,14 @@ function match() {
       if (imageField.files[0]) 
         this.postImage(imageField.files[0]).then(d => {
           console.log(d);
-          this.me.images = [
-            ...images, {
+          this.me = {...this.me, images: [
+            ...this.me.images, {
               imageId: d.imageId,
               imageUrl: d.imageUrl
-          }];
-          this.state.selectedProfile = {...me};
+          }]};
+          console.log('me');
+          console.log(this.me);
+          this.state.selectedProfile = {...this.me};
           this.state.uploadText = `Image Uploaded.`;
         }).catch (e => {
           console.log(`error uploading image ${e}`);
@@ -380,7 +402,9 @@ function match() {
               console.log(d);
               resolve(d);
             })
-          reject('no response');
+          else {
+            reject('no response');
+          }
         }).catch(e => {
           reject(`Failed to add image: ${e}`);
         });
