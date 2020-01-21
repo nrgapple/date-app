@@ -1,5 +1,7 @@
 # App
 
+[![Join the chat at https://gitter.im/date-app/community](https://badges.gitter.im/date-app/community.svg)](https://gitter.im/date-app/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Useful Links
 
 ### Cards
