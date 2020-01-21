@@ -30,12 +30,15 @@
       src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v1.8.2/dist/alpine.js"
       defer
     ></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightslider/1.1.3/css/lightslider.min.css" />                  
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightslider/1.1.3/js/lightslider.min.js"></script>
     <!-- import the webpage's client-side javascript file -->
     <style>
       /*Override module height.*/
       [type="checkbox"].modal+div .card {
         max-height: 100%;
-      }
+      }      
     </style>
   </head>
   <body>
@@ -95,7 +98,7 @@
       </header>
       <main>
         <div x-show="state.activeTab === 'home'">
-          <div class="row">
+          <div class="row" style="padding-bottom:10vh">
             <div class="col-sm"></div>
             <div class="col-sm-10 col-md-4 col-lg-3">
               <div class="card fluid" x-show="state.currentPerson === undefined && state.isLoggedOn">
@@ -123,12 +126,10 @@
                   </h2>
                 </div>
                 <div class="section">
-                  <div class="glightbox" data-gallery="gallery1" width="100%" x-show="!state.isEditing" x-html="imagesSwipeHTML(state.currentPerson);" id="profile-slideshow">
-                    <img
-                      id="card-image"
-                      x-bind:src="state.currentPerson != null && state.currentPerson.images != null && state.currentPerson.images.length > 0?state.currentPerson.images[0].imageUrl:'https://via.placeholder.com/300.png'"
-                    />
-                  </div>
+                  <img
+                    id="card-image"
+                    x-bind:src="state.currentPerson != null && state.currentPerson.images != null && state.currentPerson.images.length > 0?state.currentPerson.images[0].imageUrl:'https://via.placeholder.com/300.png'"
+                  />
                 </div>
                 <div class="section">
                   <h4
@@ -153,8 +154,10 @@
             <div class="col-sm"></div>
           </div>
           <div class="row" 
-            x-show="state.currentPerson != null && state.isLoggedOn">
-            <div class="col-sm-2"></div>
+            x-show="state.currentPerson != null && state.isLoggedOn && !state.loading"
+            style="bottom: 0; position: fixed; right: 0;"
+          >
+            <div></div>
             <div class="col-sm-4">
               <button id="pass" style="width:100%" x-on:click="pass()">
                 <img
@@ -169,7 +172,7 @@
                 />
               </button>
             </div>
-            <div class="col-sm-2"></div>
+            <div></div>
           </div>
         </div>
         <div x-show="state.activeTab === 'chat'">
@@ -259,10 +262,12 @@
                     </h2>
                   </div>
                   <div class="section">
-                    <img
-                      id="card-image"
-                      x-bind:src="state.selectedProfile != null && state.selectedProfile.images != null && state.selectedProfile.images.length > 0?state.selectedProfile.images[0].imageUrl:'https://via.placeholder.com/300.png?text=No+Image+Found'"
-                    />
+                    <div class="glightbox" data-gallery="gallery1" width="100%" x-html="imagesSwipeHTML(state.currentPerson);" id="match-slideshow">
+                      <img
+                        id="card-image"
+                        x-bind:src="state.selectedProfile != null && state.selectedProfile.images != null && state.selectedProfile.images.length > 0?state.selectedProfile.images[0].imageUrl:'https://via.placeholder.com/300.png'"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -272,7 +277,7 @@
         <input type="checkbox" id="profile-module-control" class="modal" x-bind:checked="state.isProfileActive">
         <div role="dialog" aria-labelledby="dialog-title">
         <div class="card fluid" style="height: 70vh;" x-on:click.away="state.isProfileActive = false; state.isEditing = false">
-          <div class="row">
+          <div class="row cols-sm">
             <div>
               <div class="card fluid" id="profile">
                 <div class="section">
@@ -297,11 +302,17 @@
                   </h2>
                 </div>
                 <div class="section">
-                  <div class="glightbox" data-gallery="gallery1" width="100%" x-show="!state.isEditing" x-html="imagesSwipeHTML(state.selectedProfile);" id="profile-slideshow">
-                    <img
-                      id="card-image"
-                      x-bind:src="state.selectedProfile != null && state.selectedProfile.images != null && state.selectedProfile.images.length > 0?state.selectedProfile.images[0].imageUrl:'https://via.placeholder.com/300.png'"
-                    />
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <ul id="lightSlider" width="200px" x-show="!state.isEditing" x-html="imagesSwipeHTML(state.selectedProfile);">
+                        <li>
+                          <img
+                            id="card-image"
+                            x-bind:src="state.selectedProfile != null && state.selectedProfile.images != null && state.selectedProfile.images.length > 0?state.selectedProfile.images[0].imageUrl:'https://via.placeholder.com/300.png'"
+                          />
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                   <div class="button-group" x-show="state.isEditing">
                     <input type="file" name="add-image" accept="image/*" id="add-image">
